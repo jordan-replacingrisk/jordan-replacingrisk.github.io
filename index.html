@@ -1,65 +1,158 @@
-<script type="module">
-  import * as THREE from 'three';
-  import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
-  import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Braces GLB Viewer with Hotspot</title>
 
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 1, 5);
-
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
-
-  const controls = new OrbitControls(camera, renderer.domElement);
-
-  const raycaster = new THREE.Raycaster();
-  const mouse = new THREE.Vector2();
-
-  const hotspotObjects = [];
-
-  // Example hotspot marker
-  const hotspotGeometry = new THREE.SphereGeometry(0.05, 16, 16);
-  const hotspotMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-
-  const hotspot1 = new THREE.Mesh(hotspotGeometry, hotspotMaterial);
-  hotspot1.position.set(0, 1, 0);
-  hotspot1.userData = {
-    title: 'Front Bracket',
-    description: 'This is the front bracket area.'
-  };
-
-  scene.add(hotspot1);
-  hotspotObjects.push(hotspot1);
-
-  const loader = new GLTFLoader();
-  loader.load('./Braces.glb', function (gltf) {
-    scene.add(gltf.scene);
-  });
-
-  window.addEventListener('click', (event) => {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-
-    const intersects = raycaster.intersectObjects(hotspotObjects);
-
-    if (intersects.length > 0) {
-      const hotspot = intersects[0].object;
-
-      alert(
-        hotspot.userData.title + '\n\n' +
-        hotspot.userData.description
-      );
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #111;
+      font-family: Arial, sans-serif;
     }
-  });
 
-  function animate() {
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-  }
+    #infoBox {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      display: none;
+      max-width: 250px;
+      z-index: 10;
+    }
 
-  animate();
-</script>
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="infoBox"></div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x222222);
+
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    camera.position.set(0, 1, 5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+    directionalLight.position.set(5, 5, 5);
+    scene.add(directionalLight);
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const hotspotObjects = [];
+    const infoBox = document.getElementById('infoBox');
+
+    // Create visible hotspot
+    const hotspotGeometry = new THREE.SphereGeometry(0.15, 32, 32);
+    const hotspotMaterial = new THREE.MeshStandardMaterial({
+      color: 0xff0000,
+      emissive: 0xff0000,
+      emissiveIntensity: 2
+    });
+
+    const hotspot = new THREE.Mesh(hotspotGeometry, hotspotMaterial);
+    hotspot.position.set(0, 1, 1);
+
+    hotspot.userData = {
+      title: 'Front Bracket',
+      description: 'This hotspot highlights the front bracket area of the braces model.'
+    };
+
+    scene.add(hotspot);
+    hotspotObjects.push(hotspot);
+
+    // Load GLB model
+    const loader = new GLTFLoader();
+
+    loader.load(
+      './Braces.glb',
+      function (gltf) {
+        const model = gltf.scene;
+        scene.add(model);
+      },
+      undefined,
+      function (error) {
+        console.error('Error loading GLB model:', error);
+      }
+    );
+
+    // Click detection
+    window.addEventListener('click', (event) => {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+
+      const intersects = raycaster.intersectObjects(hotspotObjects);
+
+      if (intersects.length > 0) {
+        const clickedHotspot = intersects[0].object;
+
+        infoBox.innerHTML = `
+          <strong>${clickedHotspot.userData.title}</strong><br><br>
+          ${clickedHotspot.userData.description}
+        `;
+
+        infoBox.style.display = 'block';
+      } else {
+        infoBox.style.display = 'none';
+      }
+    });
+
+    // Animate hotspot pulse
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const scale = 1 + Math.sin(Date.now() * 0.005) * 0.15;
+      hotspot.scale.set(scale, scale, scale);
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Resize handling
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
