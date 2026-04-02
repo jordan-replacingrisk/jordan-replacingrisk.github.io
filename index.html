@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Braces GLB Viewer with Hotspot</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Braces GLB Viewer</title>
 
   <style>
     body {
@@ -25,19 +25,24 @@
       max-width: 250px;
       z-index: 10;
     }
-
-    canvas {
-      display: block;
-    }
   </style>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
 </head>
 <body>
   <div id="infoBox"></div>
 
   <script type="module">
-    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
-    import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
-    import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x222222);
@@ -81,7 +86,7 @@
 
     hotspot.userData = {
       title: 'Front Bracket',
-      description: 'This hotspot highlights the front bracket area of the braces model.'
+      description: 'This hotspot highlights the front bracket area.'
     };
 
     scene.add(hotspot);
@@ -91,12 +96,12 @@
 
     loader.load(
       './Braces.glb',
-      function (gltf) {
+      function(gltf) {
         const model = gltf.scene;
         scene.add(model);
       },
       undefined,
-      function (error) {
+      function(error) {
         console.error('Error loading GLB model:', error);
       }
     );
@@ -126,8 +131,8 @@
     function animate() {
       requestAnimationFrame(animate);
 
-      const scale = 1 + Math.sin(Date.now() * 0.005) * 0.15;
-      hotspot.scale.set(scale, scale, scale);
+      const pulse = 1 + Math.sin(Date.now() * 0.005) * 0.15;
+      hotspot.scale.set(pulse, pulse, pulse);
 
       controls.update();
       renderer.render(scene, camera);
