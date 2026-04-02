@@ -106,27 +106,32 @@
       }
     );
 
-    window.addEventListener('click', (event) => {
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+window.addEventListener('click', (event) => {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-      raycaster.setFromCamera(mouse, camera);
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(hotspotObjects);
 
-      const intersects = raycaster.intersectObjects(hotspotObjects);
+  if (intersects.length > 0) {
+    const clickedHotspot = intersects[0].object;
 
-      if (intersects.length > 0) {
-        const clickedHotspot = intersects[0].object;
+    // Show your info box
+    infoBox.innerHTML = `
+      <strong>${clickedHotspot.userData.title}</strong><br><br>
+      ${clickedHotspot.userData.description}
+    `;
+    infoBox.style.display = 'block';
 
-        infoBox.innerHTML = `
-          <strong>${clickedHotspot.userData.title}</strong><br><br>
-          ${clickedHotspot.userData.description}
-        `;
-
-        infoBox.style.display = 'block';
-      } else {
-        infoBox.style.display = 'none';
-      }
-    });
+    // Tell Storyline the hotspot was clicked
+    if (window.parent && window.parent.GetPlayer) {
+      const player = window.parent.GetPlayer();
+      player.SetVar('HotspotClicked', true);
+    }
+  } else {
+    infoBox.style.display = 'none';
+  }
+});
 
     function animate() {
       requestAnimationFrame(animate);
