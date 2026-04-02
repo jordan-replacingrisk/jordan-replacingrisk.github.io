@@ -1,10 +1,10 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GLB Viewer</title>
+
   <style>
     body {
       margin: 0;
@@ -18,8 +18,16 @@
   </style>
 </head>
 <body>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+      }
+    }
+  </script>
+
   <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+    import * as THREE from 'three';
     import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
     import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
@@ -41,8 +49,8 @@
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
 
-    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 2);
-    scene.add(light);
+    const ambientLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2);
+    scene.add(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
     directionalLight.position.set(5, 10, 7.5);
@@ -51,7 +59,7 @@
     const loader = new GLTFLoader();
 
     loader.load(
-      'Braces.glb', // Replace with your GLB file path
+      './Braces.glb',
       function (gltf) {
         const model = gltf.scene;
         scene.add(model);
@@ -78,6 +86,3 @@
   </script>
 </body>
 </html>
-```
-
-Save your `.glb` file in the same folder as the HTML file and rename it to `model.glb`, or update the file path in the loader.
